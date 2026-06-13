@@ -1,5 +1,4 @@
 import requests
-import json
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 MODEL = "llama3.2"
@@ -14,15 +13,23 @@ You have been given the content of a resume. Answer questions about:
 Be concise, accurate, and helpful. Base your answers strictly on the resume content provided."""
 
 
-def ask_about_resume(resume_text: str, user_message: str) -> str:
+def ask_about_resume(resume_text: str, user_message: str, history: list = None) -> str:
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": f"Here is the resume content:\n\n{resume_text}"},
+    ]
+
+    if history:
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": user_message})
+
     payload = {
         "model": MODEL,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Here is the resume content:\n\n{resume_text}\n\n---\n\n{user_message}"},
-        ],
+        "messages": messages,
         "stream": False,
-        "options": {"temperature": 0.3},
+        "options": {"temperature": 0.7},
     }
     response = requests.post(OLLAMA_URL, json=payload)
     response.raise_for_status()

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from resume_parser import parse_resume
@@ -18,6 +18,7 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     resume_text: str
     message: str
+    history: list = []
 
 
 class ChatResponse(BaseModel):
@@ -33,7 +34,7 @@ async def upload_resume(file: UploadFile = File(...)):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    reply = ask_about_resume(request.resume_text, request.message)
+    reply = ask_about_resume(request.resume_text, request.message, request.history)
     return ChatResponse(reply=reply)
 
 

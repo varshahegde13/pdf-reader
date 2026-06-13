@@ -4,6 +4,7 @@ function App() {
   const [resumeText, setResumeText] = useState('')
   const [filename, setFilename] = useState('')
   const [messages, setMessages] = useState([])
+  const [history, setHistory] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -25,6 +26,7 @@ function App() {
       const data = await res.json()
       setResumeText(data.text)
       setFilename(data.filename)
+      setHistory([])
       setMessages([
         { role: 'bot', text: `Got it! I've read **${data.filename}**. Ask me anything about the skills, experience, or qualifications in this resume.` },
       ])
@@ -52,9 +54,10 @@ function App() {
       const res = await fetch('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume_text: resumeText, message: userMsg }),
+        body: JSON.stringify({ resume_text: resumeText, message: userMsg, history }),
       })
       const data = await res.json()
+      setHistory((prev) => [...prev, { role: 'user', content: userMsg }, { role: 'assistant', content: data.reply }])
       setMessages((prev) => [...prev, { role: 'bot', text: data.reply }])
     } catch {
       setMessages((prev) => [...prev, { role: 'bot', text: 'Error getting response. Check backend connection.' }])
@@ -97,7 +100,7 @@ function App() {
           <div className="file-info">
             Uploaded: <strong>{filename}</strong>
             <button
-              onClick={() => { setResumeText(''); setFilename(''); setMessages([]) }}
+              onClick={() => { setResumeText(''); setFilename(''); setMessages([]); setHistory([]) }}
               style={{
                 marginLeft: 16,
                 padding: '4px 12px',
